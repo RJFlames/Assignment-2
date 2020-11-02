@@ -1,0 +1,82 @@
+R1. <Rat20F>                          ::= <Opt Function Definitions>  $$  <OptDeclaration List>  <Statement List>  $$
+R2. <Opt Function Definitions> 	      ::= <Function Definitions>  |  <Empty>
+R3. <Function Definitions>            ::= <Function>  <Function Definitions>''
+3a. <Function Definitions>'           ::= <Function Definitions>  |  ε
+R4. <Function>                        ::= function  <Identifier>  ( <Opt Parameter List> )  <Opt Declaration List>  <Body>
+R5. <Opt Parameter List>              ::= <Parameter List>  |  <Empty>
+R6. <Parameter List>                  ::= <Parameter> <Parameter List>'
+6a. <Parameter List>'                 ::= ,  <Parameter List>  |  ε
+R7. <Parameter>                       ::= < IDs >  <Qualifier>
+R8. <Qualifier>                       ::= Int  |  boolean  |  real
+R9. <Body>                            ::= { <Statement List> }
+R10. <Opt Declaration List>           ::= <Declaration List>  |  <Empty>
+R11. <Declaration List>               ::= <Declaration>  <Declaration List>'
+11a. <Declaration List>'              ::= <Declaration List>  |  ε
+R12. <Declaration>                    ::= <Qualifier> <IDs>
+R13. <IDs>                            ::= <Identifier>  |  <IDs>'
+13a. <IDs>'                           ::= ,  <IDs>  |  ε
+R14. <Statement List>                 ::= <Statement>  <Statement List>'
+14a. <Statement List>'                ::= <Statement>  |  ε
+R15. <Statement>                      ::= <Compound>  |  <Assign>  |  <If>  |  <Return>  |  <Print>  |  <Scan>  |  <While>
+R16. <Compound>                       ::= {  <Statement List>  }
+R17. <Assign>                         ::= <Identifier>  =  <Expression> ;
+R18. <If>                             ::= if  ( <Condition> )  <Statement>  <If>'
+18a. <If>'                            ::= fi  |  else  <Statement>  fi
+R19. <Return>                         ::= return  <Return>'
+19a. <Return>'                        ::= ;  |  <Expression>  ;
+R20. <Print>                          ::= put ( <Expression> );
+R21. <Scan>                           ::= get ( <IDs> );
+R22. <While>                          ::= while ( <Condition> )  <Statement>
+R23. <Condition>                      ::= <Expression>  <Relop>  <Expression>
+R24. <Relop>                          ::= ==  |  !=  |  >  |  <  |  <=  |  =>
+R25. <Expression>                     ::=  <Term>  <Expression>'
+25a. <Expression>'                    ::=  +  <Term>  <Expression>' | -  <Term>  <Expression>' | ε
+R26. <Term>                           ::=  <Factor>  <Term>'
+26a. <Term>'                          ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  ε
+R27. <Factor>                         ::= -  <Primary>  |  <Primary>
+R28. <Primary>                        ::= <Identifier>  <Primary>'  |  <Integer>  |  ( <Expression> )  |  <Real>  |  true  |  false
+28a. <Primary>'                       ::= ( <IDs> )  |  ε
+R29. <Empty>                          ::= ε
+
+
+R25. E -> E + T  |  E - T  |  T
+α1 = +T, α2 = -T, δ = T
+<Expression>  ::=  <Term>  <Expression>'
+<Expression>'  ::=  +  <Term>  <Expression>' | -  <Term>  <Expression>' | ε
+
+R26. T -> T * F  |  T / F  |  F
+α1 = *F, α2 = /F, δ = F
+<Term>  ::=  <Factor>  <Term>'
+<Term>'  ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  ε
+
+R3.
+<Function Definitions>                ::= <Function>  <Function Definitions>''
+<Function Definitions>'               ::= <Function Definitions>  |  ε
+
+R6
+<Parameter List>                      ::= <Parameter> <Parameter List>'
+<Parameter List>'                     ::= ,  <Parameter List>  |  ε
+
+R11
+<Declaration List>                    ::= <Declaration>  <Declaration List>'
+<Declaration List>'                   ::= <Declaration List>  |  ε
+
+R13
+<IDs>                                 ::= <Identifier>  |  <IDs>'
+<IDs>'                                ::= ,  <IDs>  |  ε
+
+R14
+<Statement List>                      ::= <Statement>  <Statement List>'
+<Statement List>'                     ::= <Statement>  |  ε
+
+R18
+<If>                                  ::= if  ( <Condition> )  <Statement>  <If>'
+<If>'                                 ::= fi  |  else  <Statement>  fi
+
+R19
+<Return>                              ::= return  <Return>'
+<Return>'                             ::= ;  |  <Expression>  ;
+
+R28
+<Primary>                             ::= <Identifier>  <Primary>'  |  <Integer>  |  ( <Expression> )  |  <Real>  |  true  |  false
+<Primary>'                            ::= ( <IDs> )  |  ε
