@@ -1,22 +1,22 @@
 R1. <Rat20F>                          ::= <Opt Function Definitions>  $$  <OptDeclaration List>  <Statement List>  $$
 R2. <Opt Function Definitions> 	      ::= <Function Definitions>  |  <Empty>
 R3. <Function Definitions>            ::= <Function>  <Function Definitions>''
-R4. <Function Definitions>'           ::= <Function Definitions>  |  <Empty>
+R4. <Function Definitions>'           ::= <Function Definitions>  |  ε
 R5. <Function>                        ::= function  <Identifier>  ( <Opt Parameter List> )  <Opt Declaration List>  <Body>
 R6. <Opt Parameter List>              ::= <Parameter List>  |  <Empty>
 R7. <Parameter List>                  ::= <Parameter> <Parameter List>'
-R8. <Parameter List>'                 ::= ,  <Parameter List>  |  <Empty>
+R8. <Parameter List>'                 ::= ,  <Parameter List>  |  ε
 R9. <Parameter>                       ::= < IDs >  <Qualifier>
 R10. <Qualifier>                      ::= Int  |  boolean  |  real
 R11. <Body>                           ::= { <Statement List> }
 R12. <Opt Declaration List>           ::= <Declaration List>  |  <Empty>
 R13. <Declaration List>               ::= <Declaration>  <Declaration List>'
-R14. <Declaration List>'              ::= <Declaration List>  |  <Empty>
+R14. <Declaration List>'              ::= <Declaration List>  |  ε
 R15. <Declaration>                    ::= <Qualifier> <IDs>
-R16. <IDs>                            ::= <Identifier>  <IDs>'
-R17. <IDs>'                           ::= ,  <IDs>  |  <Empty>
+R16. <IDs>                            ::= <Identifier>  |  <IDs>'
+R17. <IDs>'                           ::= ,  <IDs>  |  ε
 R18. <Statement List>                 ::= <Statement>  <Statement List>'
-R19. <Statement List>'                ::= <Statement>  |  <Empty>
+R19. <Statement List>'                ::= <Statement>  |  ε
 R20. <Statement>                      ::= <Compound>  |  <Assign>  |  <If>  |  <Return>  |  <Print>  |  <Scan>  |  <While>
 R21. <Compound>                       ::= {  <Statement List>  }
 R22. <Assign>                         ::= <Identifier>  =  <Expression> ;
@@ -30,12 +30,12 @@ R29. <While>                          ::= while ( <Condition> )  <Statement>
 R30. <Condition>                      ::= <Expression>  <Relop>  <Expression>
 R31. <Relop>                          ::= ==  |  !=  |  >  |  <  |  <=  |  =>
 R32. <Expression>                     ::=  <Term>  <Expression>'
-R33. <Expression>'                    ::=  +  <Term>  <Expression>' | -  <Term>  <Expression>' | <Empty>
+R33. <Expression>'                    ::=  +  <Term>  <Expression>' | -  <Term>  <Expression>' | ε
 R34. <Term>                           ::=  <Factor>  <Term>'
-R35. <Term>'                          ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  <Empty>
+R35. <Term>'                          ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  ε
 R36. <Factor>                         ::= -  <Primary>  |  <Primary>
 R37. <Primary>                        ::= <Identifier>  <Primary>'  |  <Integer>  |  ( <Expression> )  |  <Real>  |  true  |  false
-R38. <Primary>'                       ::= ( <IDs> )  |  <Empty>
+R38. <Primary>'                       ::= ( <IDs> )  |  ε
 R39. <Empty>                          ::= ε
 
 
@@ -54,7 +54,7 @@ R3.
 <Function Definitions>'               ::= <Function Definitions>  |  ε
 
 R6
-<Parameter List>                      ::= <Parameter>  <Parameter List>'
+<Parameter List>                      ::= <Parameter> <Parameter List>'
 <Parameter List>'                     ::= ,  <Parameter List>  |  ε
 
 R11
@@ -62,12 +62,12 @@ R11
 <Declaration List>'                   ::= <Declaration List>  |  ε
 
 R13
-<IDs>                                 ::= <Identifier>  <IDs>'
-<IDs>'                                ::= ,  <IDs>  |  <Empty>
+<IDs>                                 ::= <Identifier>  |  <IDs>'
+<IDs>'                                ::= ,  <IDs>  |  ε
 
 R14
 <Statement List>                      ::= <Statement>  <Statement List>'
-<Statement List>'                     ::= <Statement>  |  <Empty>
+<Statement List>'                     ::= <Statement>  |  ε
 
 R18
 <If>                                  ::= if  ( <Condition> )  <Statement>  <If>'
@@ -79,4 +79,4 @@ R19
 
 R28
 <Primary>                             ::= <Identifier>  <Primary>'  |  <Integer>  |  ( <Expression> )  |  <Real>  |  true  |  false
-<Primary>'                            ::= ( <IDs> )  |  <Empty>
+<Primary>'                            ::= ( <IDs> )  |  ε
