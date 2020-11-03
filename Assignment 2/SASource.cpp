@@ -67,7 +67,7 @@ bool FSM(std::string& state, char input, std::string& lexeme) {
 	return false;
 }
 
-record callLexer(std::ifstream& source) {
+record callLexer(std::ofstream& out,std::ifstream& source) {
 	std::string state = "start", lexeme = "";
 	int done = 0;
 	char c;
@@ -98,7 +98,7 @@ record callLexer(std::ifstream& source) {
 
 		if (!isspace(c) && state != "comments") { lexeme.push_back(c); }
 	}
-
+	
 }
 
 bool display = false;
@@ -109,7 +109,7 @@ void Syntax_Error(record latest, std::ofstream& out, std::string expected) {
 	// 
 }
 void Lexeme_Check(std::ofstream& out,std::ifstream& source, std::string lexeme) {
-	record latest = callLexer(source);
+	record latest = callLexer(out,source);
 	if (latest.getLexeme() != lexeme) {
 		Syntax_Error(latest, out);
 	}
@@ -121,17 +121,16 @@ void Body(std::ofstream& out, std::ifstream& source) {
 	Lexeme_Check(out, source, "{");
 	State_List(out, source);
 	Lexeme_Check(out, source, "}");
-
 }
 
 record Qualifier(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<Qualifier> ::= int | boolean | real\n";
-	record latest = callLexer(source);
+	record latest = callLexer(out,source);
 	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
 		return latest;
 	else
-		Syntax_Error(latest, out);
+		Syntax_Error(latest, out, "int, boolean, or real");
 }
 
 record Parameter(std::ofstream& out, std::ifstream& source) {
@@ -139,18 +138,37 @@ record Parameter(std::ofstream& out, std::ifstream& source) {
 		out << "<Parameter> ::= <IDs> <Qualifier>\n";
 	ID(out, source);
 	Qualifier(out, source);
-	return 
+	return;
+}
+
+record Para_List_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Parameter List>\' ::= ,  <Parameter List>  |  <Empty>\n";
+	record latest = callLexer(out,source);
+	if (latest.getLexeme() == ",")
+		Para_List(out, source);
+	else
+		return latest;
 }
 
 record Para_List(std::ofstream& out, std::ifstream& source) {
 	if (display)
-		out << "<Parameter List> ::= <Parameter> | <Parameter> , <Parameter List>\n";
+		out << "<Parameter List> ::= <Parameter> <Parameter List>'\n";
 	Parameter(out, source);
-	record latest = callLexer(source);
-	if (latest.getLexeme() == ",")
-		Para_List(out, source);
-	else 
-		return latest;
+	
+	return Para_List_Cont(out, source);
+}
+
+record Decla_List_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<R14. <Declaration List>\' ::= <Declaration List>  |  <Empty>\n";
+}
+
+record Decla_List(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Declaration List> ::= <Declaration>  <Declaration List>\'\n";
+	Decla();
+	Decla_List_Cont(out, source);
 }
 
 record OPL(std::ofstream& out, std::ifstream& source) {
@@ -159,34 +177,36 @@ record OPL(std::ofstream& out, std::ifstream& source) {
 	return Para_List(out, source);
 }
 
-record ODL(std::ofstream& out, std::ifstream& source) {
+void ODL(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<Opt Declaration List> ::= <Declaration List> | <Empty>\n";
-	Dec_List(out, source);
+	Decla_List(out, source);
 }
 
 record Func(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>\n";
-	record latest = callLexer(source);
-	if (latest.getLexeme() != "function") {
-		return latest;
-	}
-	else {
-		ID(out, source);
-		Lexeme_Check(out, source, "(");
-		latest = OPL(out,source);
-		Lexeme_Check(out, source, ")");
-		ODL(out,source);
-		Body(out,source);
-	}
+
+	ID(out, source);
+	Lexeme_Check(out, source, "(");
+	latest = OPL(out,source);
+	Lexeme_Check(out, source, ")");
+	ODL(out,source);
+	Body(out,source);
+	
+}
+
+record Func_Def_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Function Definitions> ::= <Function Definitions> | <Empty>\n";
+	Func_Def(out, source);
 }
 
 record Func_Def(std::ofstream& out, std::ifstream& source) {
 	if (display)
-		out << "<Function Definitions> ::= <Function> | <Function> <Function Definitions>\n";
+		out << "<Function Definitions> ::= <Function> <Function Definitions>'\n";
 	Func(out, source);
-	return Func_Def(out, source);
+	Func_Def_Cont(out, source);
 }
 record OFD(std::ofstream& out, std::ifstream& source) {
 	if (display)
@@ -198,10 +218,12 @@ void Rat20F(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<Rat20F> ::= <Opt Function Definitions> $$ <Opt Declaration List> <Statement List> $$\n";
 
-	record latest;
-	latest = OFD(out, source); // <Opt Function Definitions>
-	if (latest.getLexeme() != "$$")
-		Lexeme_Check(out, source, "$$");
+	record latest = callLexer(out,source);
+	if (latest.getLexeme() != "function") {
+		OFD(out, source);
+	}
+	else if (latest.getLexeme() != "$$")
+		Syntax_Error(latest, out,"$$");
 
 	ODL(out,source); // <Opt Declaration List>
 	State_List(out, source);
