@@ -29,10 +29,10 @@ R28. <Scan>                           ::= get ( <IDs> );
 R29. <While>                          ::= while ( <Condition> )  <Statement>
 R30. <Condition>                      ::= <Expression>  <Relop>  <Expression>
 R31. <Relop>                          ::= ==  |  !=  |  >  |  <  |  <=  |  =>
-R32. <Expression>                     ::=  <Term>  <Expression>'
-R33. <Expression>'                    ::=  +  <Term>  <Expression>' | -  <Term>  <Expression>' | <Empty>
-R34. <Term>                           ::=  <Factor>  <Term>'
-R35. <Term>'                          ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  <Empty>
+R32. <Expression>                     ::= <Term>  <Expression>'
+R33. <Expression>'                    ::= +  <Term>  <Expression>' | -  <Term>  <Expression>' | <Empty>
+R34. <Term>                           ::= <Factor>  <Term>'
+R35. <Term>'                          ::= *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  <Empty>
 R36. <Factor>                         ::= -  <Primary>  |  <Primary>
 R37. <Primary>                        ::= <Identifier>  <Primary>'  |  <Integer>  |  ( <Expression> )  |  <Real>  |  true  |  false
 R38. <Primary>'                       ::= ( <IDs> )  |  <Empty>
@@ -40,7 +40,6 @@ R39. <Empty>                          ::= ε
 
 Note: <Identifier>, <Integer>, <Real> are token types
 
-.
 R25. E -> E + T  |  E - T  |  T
 α1 = +T, α2 = -T, δ = T
 <Expression>  ::=  <Term>  <Expression>'
