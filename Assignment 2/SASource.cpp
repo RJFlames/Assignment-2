@@ -115,6 +115,145 @@ void Lexeme_Check(std::ofstream& out,std::ifstream& source, std::string lexeme) 
 	}
 }
 
+/* Syntax Grammar */
+
+// RJ's
+void Empty(std::ofstream& out, std::ifstream& source) {
+	//Do nothing
+}
+
+record PrimaryP(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Primary>' ::= ( <IDs> ) | <Empty>";
+	Lexeme_Check(out, source, "(");
+	IDs(out, source, callLexer(out, source));
+	Lexeme_Check(out, source, ")");
+}
+
+record Primary(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Primary> ::= <Identifier> <Primary>' | <Integer> | ( <Expression> ) | <Real> | true | false";
+	record latest = callLexer(out, source);
+	// <Identifier> <Primary>'
+	if (latest.getToken() == "identifier")
+		PrimaryP(out, source);
+	// (<Expression>)
+	else if (latest.getLexeme() == "(") {
+		Expression(out, source);
+		Lexeme_Check(out, source, ")");
+	}
+	// <Integer>
+	else if (latest.getToken() == "int")
+		/* do i return the lexeme here? */
+		int dummyVal;
+	// <Real>
+	else if (latest.getToken() == "real")
+		/* do i return the lexeme here? */
+		int dummyVal;
+	// true | false 
+	else if (latest.getLexeme() == "true" || latest.getLexeme() == "false")
+		return latest;
+}
+
+record Factor(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Factor> ::= - <Primary> | <Primary>'";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "-")
+		Primary(out, source);
+	else
+		PrimaryP(out, source);
+}
+
+record TermP(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Term>' ::= * <Factor> <Term>' | / <Factor> <Term>' | <Empty>";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "*" || latest.getLexeme() == "/") {
+		Factor(out, source);
+		TermP(out, source);
+	}
+	else
+		return latest;
+}
+
+record Term(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Term> ::= <Factor> <Term>'";
+	Factor(out, source);
+	TermP(out, source);
+}
+
+record ExpressionP(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Expression>' ::= + <Term> <Expression>' | - <Term> <Expression>' | <Empty>";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "+" || latest.getLexeme() == "-") {
+		Term(out, source);
+		ExpressionP(out, source);
+	}
+	else
+		return latest;
+}
+
+record Expression(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Expression> ::= <Term> <Expression>'";
+	Term(out, source);
+	Expression(out, source);
+}
+
+record Relop(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Relop> ::= == | != | > | < | <= | =>";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "==" || latest.getLexeme() == "!=" || latest.getLexeme() == ">" || latest.getLexeme() == "<" || latest.getLexeme() == "<=" || latest.getLexeme() == "=>")
+		return latest;
+}
+
+record Condition(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Condition> ::= <Expression> <Relop> <Expression>";
+	Expression(out, source);
+	Relop(out, source);
+	Expression(out, source);
+}
+
+record While(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<While> ::= while ( <Condition> ) <Statement>";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "while") {
+		Lexeme_Check(out, source, "(");
+		Condition(out, source);
+		Lexeme_Check(out, source, ")");
+		Statement(out, source);
+	}
+}
+
+record Scan(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Scan> ::= get ( <IDs> );";
+	record latest = callLexer(out, source);
+	Lexeme_Check(out, source, "get");
+	Lexeme_Check(out, source, "(");
+	IDs(out, source, callLexer(out, source));
+	Lexeme_Check(out, source, ")");
+	Lexeme_Check(out, source, ";");
+}
+
+record Print(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Print> ::= put ( <Expression> );";
+	record latest = callLexer(out, source);
+	Lexeme_Check(out, source, "put");
+	Lexeme_Check(out, source, "(");
+	Expression(out, source);
+	Lexeme_Check(out, source, ")");
+	Lexeme_Check(out, source, ";");
+}
+
+// Vien's
 record IDs_Cont(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<IDs>' ::= ,  <IDs>  |  <Empty>'\n";
