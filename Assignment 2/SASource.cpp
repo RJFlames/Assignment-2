@@ -117,7 +117,7 @@ void Lexeme_Check(std::ofstream& out,std::ifstream& source, std::string lexeme) 
 
 /* Syntax Grammar */
 
-// RJ's
+// RJ's Section
 void Empty(std::ofstream& out, std::ifstream& source) {
 	//Do nothing
 }
@@ -253,7 +253,106 @@ record Print(std::ofstream& out, std::ifstream& source) {
 	Lexeme_Check(out, source, ";");
 }
 
-// Vien's
+// Cris's Section
+
+record Statement(std::ofstream& out, std::ifstream& source){
+	if (display)
+		out << "<Statement ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>\n";
+	record latest = callLexer(out, source);
+	// <Compound>
+	if(latest.getLexeme() == "<Compound>")
+		Compound(out, source);
+	//<Assign>
+	else if(latest.getLexeme() == "<Assign>")
+		Assign(out, source);
+	//<If>
+	else if(latest.getLexeme() == "<If>")
+		If(out, source);
+	//<Return>
+	else if(latest.getLexeme() == "<Return>")
+		Return(out, source);
+	//<Print>
+	else if(latest.getLexeme() == "<Print>")
+		Print(out, source);
+	//<Scan>
+	else if(latest.getLexeme() == "<Scan>")
+		Scan(out, source);
+	//<While>
+	else if(latest.getLexeme() == "<While>")
+		While(out,source);
+}
+
+record Compound(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "<Compound> ::= { <Statement List> }\n";
+	record latest = callLexer(out, source);
+	Lexeme_Check(out, source, "{");
+	State_List(out, source, latest);
+	Lexeme_Check(out, source, "}");
+}
+
+record Assign(std::ofstream& out, std::ifstream& source){
+	if (display)
+		out << "<Assign> :: <Identifier> = <Expression>\n";
+
+	record latest = callLexer(out, source);
+	if (latest.getToken() != "identifier")
+		Syntax_Error(latest, out, "an identifier");
+
+	if(latest.getLexeme() != "=")
+		Syntax_Error(latest, out, "=");
+
+	Expression(out, source);
+}
+
+record If(std::ofstream& out, std::ifstream& source){
+	if(display)
+		out << "<If> ::= if ( <Condition> ) <Statement> <If>'\n";
+	record latest = callLexer(out, source);
+	if(latest.getLexeme() == "if"){
+		Lexeme_Check(out, source, "(");
+		Condition(out, source);
+		Lexeme_Check(out, source, ")");
+		Statement(out, source);
+		IfP(out, source);
+	}
+}
+
+record IfP(std::ofstream& out, std::ifstream& source){
+	if(display)
+		out << "<If>' ::= fi | else <Statement> fi\n";
+	record latest = callLexer(out, source);
+	if(latest.getLexeme() == "fi")
+		return callLexer(out, source);
+
+	else if(latest.getLexeme() == "else"){
+		Statement(out, source);
+		Lexeme_Check(out, source, "fi");
+	}
+}
+
+record Return(std::ofstream& out, std::ifstream& source){
+	if(display)
+		out << "<Return> ::= return <Return>'\n";
+	record latest = callLexer(out, source);
+	Lexeme_Check(out, source, "return");
+	ReturnP(out, source);
+}
+
+record ReturnP(std::ofstream& out, std::ifstream& source){
+	if(display)
+		out << "<Return>' ::= ; | <Expression>\n";
+	record latest = callLexer(out, source);
+	if(latest.getLexeme() == ";")
+		return latest;
+	else
+		Syntax_Error(latest, out, ";");
+
+	Expression(out, source);
+	Lexeme_Check(out, source, ";");
+}
+
+// Vien's Section
 record IDs_Cont(std::ofstream& out, std::ifstream& source) {
 	if (display)
 		out << "<IDs>' ::= ,  <IDs>  |  <Empty>'\n";
