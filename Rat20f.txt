@@ -38,6 +38,8 @@ R37. <Primary>                        ::= <Identifier>  <Primary>'  |  <Integer>
 R38. <Primary>'                       ::= ( <IDs> )  |  <Empty>
 R39. <Empty>                          ::= ε
 
+Note: <Identifier>, <Integer>, <Real> are token types
+
 .
 R25. E -> E + T  |  E - T  |  T
 α1 = +T, α2 = -T, δ = T
