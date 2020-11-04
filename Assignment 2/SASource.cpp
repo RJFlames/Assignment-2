@@ -157,12 +157,12 @@ record Primary(std::ofstream& out, std::ifstream& source) {
 
 record Factor(std::ofstream& out, std::ifstream& source) {
 	if (display)
-		out << "<Factor> ::= - <Primary> | <Primary>'";
+		out << "<Factor> ::= - <Primary> | <Primary>";
 	record latest = callLexer(out, source);
 	if (latest.getLexeme() == "-")
 		Primary(out, source);
 	else
-		PrimaryP(out, source);
+		Primary(out, source);
 }
 
 record TermP(std::ofstream& out, std::ifstream& source) {
