@@ -93,6 +93,7 @@ record callLexer(std::ofstream& out,std::ifstream& source) {
 			record latest;
 			latest.setLexeme(lexeme);
 			latest.setToken(state);
+			if (latest.getToken() != "fileend") out << std::left << std::setw(10) << "Token:" << latest.getToken() << "\t:\t" << std::setw(10) << "Lexeme:" << latest.getLexeme() << "\n";
 			return latest;
 		}
 
@@ -107,6 +108,7 @@ void Syntax_Error(record latest, std::ofstream& out, std::string expected) {
 	std::cerr << "Syntax Error: Expected " << expected << "\n";
 	std::cerr << "Received " << latest.getToken() << " \"" << latest.getLexeme() << "\"";
 	// 
+	exit(1);
 }
 void Lexeme_Check(std::ofstream& out,std::ifstream& source, std::string lexeme) {
 	record latest = callLexer(out,source);
@@ -115,433 +117,22 @@ void Lexeme_Check(std::ofstream& out,std::ifstream& source, std::string lexeme) 
 	}
 }
 
-/* Syntax Grammar */
-
-// RJ's Section
-void Empty(std::ofstream& out, std::ifstream& source) {
-	//Do nothing
-}
-
-record PrimaryP(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Primary>' ::= ( <IDs> ) | <Empty>";
-	Lexeme_Check(out, source, "(");
-	IDs(out, source, callLexer(out, source));
-	Lexeme_Check(out, source, ")");
-}
-
-record Primary(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Primary> ::= <Identifier> <Primary>' | <Integer> | ( <Expression> ) | <Real> | true | false";
-	record latest = callLexer(out, source);
-	// <Identifier> <Primary>'
-	if (latest.getToken() == "identifier")
-		PrimaryP(out, source);
-	// (<Expression>)
-	else if (latest.getLexeme() == "(") {
-		Expression(out, source);
-		Lexeme_Check(out, source, ")");
-	}
-	// <Integer>
-	else if (latest.getToken() == "int")
-		/* do i return the lexeme here? */
-		int dummyVal;
-	// <Real>
-	else if (latest.getToken() == "real")
-		/* do i return the lexeme here? */
-		int dummyVal;
-	// true | false 
-	else if (latest.getLexeme() == "true" || latest.getLexeme() == "false")
-		return latest;
-}
-
-record Factor(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Factor> ::= - <Primary> | <Primary>";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "-")
-		Primary(out, source);
-	else
-		Primary(out, source);
-}
-
-record TermP(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Term>' ::= * <Factor> <Term>' | / <Factor> <Term>' | <Empty>";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "*" || latest.getLexeme() == "/") {
-		Factor(out, source);
-		TermP(out, source);
-	}
-	else
-		return latest;
-}
-
-record Term(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Term> ::= <Factor> <Term>'";
-	Factor(out, source);
-	TermP(out, source);
-}
-
-record ExpressionP(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Expression>' ::= + <Term> <Expression>' | - <Term> <Expression>' | <Empty>";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "+" || latest.getLexeme() == "-") {
-		Term(out, source);
-		ExpressionP(out, source);
-	}
-	else
-		return latest;
-}
-
-record Expression(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Expression> ::= <Term> <Expression>'";
-	Term(out, source);
-	Expression(out, source);
-}
-
-record Relop(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Relop> ::= == | != | > | < | <= | =>";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "==" || latest.getLexeme() == "!=" || latest.getLexeme() == ">" || latest.getLexeme() == "<" || latest.getLexeme() == "<=" || latest.getLexeme() == "=>")
-		return latest;
-}
-
-record Condition(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Condition> ::= <Expression> <Relop> <Expression>";
-	Expression(out, source);
-	Relop(out, source);
-	Expression(out, source);
-}
-
-record While(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<While> ::= while ( <Condition> ) <Statement>";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "while") {
-		Lexeme_Check(out, source, "(");
-		Condition(out, source);
-		Lexeme_Check(out, source, ")");
-		Statement(out, source);
-	}
-}
-
-record Scan(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Scan> ::= get ( <IDs> );";
-	record latest = callLexer(out, source);
-	Lexeme_Check(out, source, "get");
-	Lexeme_Check(out, source, "(");
-	IDs(out, source, callLexer(out, source));
-	Lexeme_Check(out, source, ")");
-	Lexeme_Check(out, source, ";");
-}
-
-record Print(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Print> ::= put ( <Expression> );";
-	record latest = callLexer(out, source);
-	Lexeme_Check(out, source, "put");
-	Lexeme_Check(out, source, "(");
-	Expression(out, source);
-	Lexeme_Check(out, source, ")");
-	Lexeme_Check(out, source, ";");
-}
-
-// Cris's Section
-
-record Statement(std::ofstream& out, std::ifstream& source){
-	if (display)
-		out << "<Statement ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>\n";
-	record latest = callLexer(out, source);
-	// <Compound>
-	if(latest.getLexeme() == "<Compound>")
-		Compound(out, source);
-	//<Assign>
-	else if(latest.getLexeme() == "<Assign>")
-		Assign(out, source);
-	//<If>
-	else if(latest.getLexeme() == "<If>")
-		If(out, source);
-	//<Return>
-	else if(latest.getLexeme() == "<Return>")
-		Return(out, source);
-	//<Print>
-	else if(latest.getLexeme() == "<Print>")
-		Print(out, source);
-	//<Scan>
-	else if(latest.getLexeme() == "<Scan>")
-		Scan(out, source);
-	//<While>
-	else if(latest.getLexeme() == "<While>")
-		While(out,source);
-}
-
-record Compound(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Compound> ::= { <Statement List> }\n";
-	record latest = callLexer(out, source);
-	Lexeme_Check(out, source, "{");
-	State_List(out, source, latest);
-	Lexeme_Check(out, source, "}");
-}
-
-record Assign(std::ofstream& out, std::ifstream& source){
-	if (display)
-		out << "<Assign> :: <Identifier> = <Expression>\n";
-
-	record latest = callLexer(out, source);
-	if (latest.getToken() != "identifier")
-		Syntax_Error(latest, out, "an identifier");
-
-	if(latest.getLexeme() != "=")
-		Syntax_Error(latest, out, "=");
-
-	Expression(out, source);
-}
-
-record If(std::ofstream& out, std::ifstream& source){
-	if(display)
-		out << "<If> ::= if ( <Condition> ) <Statement> <If>'\n";
-	record latest = callLexer(out, source);
-	if(latest.getLexeme() == "if"){
-		Lexeme_Check(out, source, "(");
-		Condition(out, source);
-		Lexeme_Check(out, source, ")");
-		Statement(out, source);
-		IfP(out, source);
-	}
-}
-
-record IfP(std::ofstream& out, std::ifstream& source){
-	if(display)
-		out << "<If>' ::= fi | else <Statement> fi\n";
-	record latest = callLexer(out, source);
-	if(latest.getLexeme() == "fi")
-		return callLexer(out, source);
-
-	else if(latest.getLexeme() == "else"){
-		Statement(out, source);
-		Lexeme_Check(out, source, "fi");
-	}
-}
-
-record Return(std::ofstream& out, std::ifstream& source){
-	if(display)
-		out << "<Return> ::= return <Return>'\n";
-	record latest = callLexer(out, source);
-	Lexeme_Check(out, source, "return");
-	ReturnP(out, source);
-}
-
-record ReturnP(std::ofstream& out, std::ifstream& source){
-	if(display)
-		out << "<Return>' ::= ; | <Expression>\n";
-	record latest = callLexer(out, source);
-	if(latest.getLexeme() == ";")
-		return latest;
-	else
-		Syntax_Error(latest, out, ";");
-
-	Expression(out, source);
-	Lexeme_Check(out, source, ";");
-}
-
-// Vien's Section
-record IDs_Cont(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<IDs>' ::= ,  <IDs>  |  <Empty>'\n";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == ",")
-		return IDs(out, source,callLexer(out,source));
-	else
-		return latest;
-}
-
-record IDs(std::ofstream& out, std::ifstream& source,record latest) {
-	if (display)
-		out << "<IDs> ::= <Identifier> <IDs>'\n";
-	if (latest.getToken() != "identifier")
-		Syntax_Error(latest, out, "an identifier");
-	return IDs_Cont(out, source);
-}
-
-void Body(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Body> ::= { < Statement List> }\n";
-	Lexeme_Check(out, source, "{");
-	record latest = callLexer(out, source);
-	State_List(out, source, latest);
-	Lexeme_Check(out, source, "}");
-}
-
-record Qualifier(std::ofstream& out, std::ifstream& source,record latest) {
-	if (display)
-		out << "<Qualifier> ::= int | boolean | real\n";
-	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
-		return callLexer(out, source);
-	else
-		Syntax_Error(latest, out, "int, boolean, or real");
-}
-
-void Parameter(std::ofstream& out, std::ifstream& source,record a) {
-	if (display)
-		out << "<Parameter> ::= <IDs> <Qualifier>\n";
-	record latest = IDs(out, source, a);
-	Qualifier(out, source,latest);
-}
-
-record Decla(std::ofstream& out, std::ifstream& source, record a) {
-	if (display)
-		out << "<Parameter> ::= <Qualifier> <IDs>\n";
-	Qualifier(out, source, a);
-	record latest = callLexer(out,source);
-	return IDs(out, source, latest);
-}
-
-record Para_List_Cont(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Parameter List>\' ::= ,  <Parameter List>  |  <Empty>\n";
-	record latest = callLexer(out,source);
-	if (latest.getLexeme() == ",")
-		return Para_List(out, source, callLexer(out,source));
-	else
-		return latest;
-}
-
-record Para_List(std::ofstream& out, std::ifstream& source, record latest) {
-	if (display)
-		out << "<Parameter List> ::= <Parameter> <Parameter List>'\n";
-	Parameter(out, source,latest);
-	return Para_List_Cont(out, source);
-}
-
-record Decla_List_Cont(std::ofstream& out, std::ifstream& source, record latest) {
-	if (display)
-		out << "<Declaration List>\' ::= <Declaration List>  |  <Empty>\n";
-	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
-		return Decla_List(out, source,latest);
-	else
-		return latest;
-}
-
-record Decla_List(std::ofstream& out, std::ifstream& source, record latest) {
-	if (display)
-		out << "<Declaration List> ::= <Declaration>  <Declaration List>\'\n";
-	record l = Decla(out, source, latest);
-	return Decla_List_Cont(out, source, l);
-}
-
-record State_List_Cont(std::ofstream& out, std::ifstream& source, record latest) {
-	if (display)
-		out << "<Statement List>\' ::= <Statement List>  |  <Empty>\n";
-	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
-		return State_List(out, source, latest);
-	else
-		return latest;
-}
-
-record State_List(std::ofstream& out, std::ifstream& source, record latest) {
-	if (display)
-		out << "<Statement List> ::= <Statement> <Statement  List>\'\n";
-	latest = Statement(out, source, latest);
-	return State_List_Cont(out, source,latest);
-}
-
-record OPL(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Opt Parameter List> ::= <Parameter List> | <Empty>\n";
-	record latest = callLexer(out, source);
-	if (latest.getToken() != "identifier") {
-		return latest;
-	}
-	return Para_List(out, source, latest);
-	
-}
-
-record ODL(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Opt Declaration List> ::= <Declaration List> | <Empty>\n";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real") {
-		return Decla_List(out, source,latest);
-	}
-	else
-		return latest;
-	
-}
-
-record Func(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>\n";
-
-	record latest = callLexer(out, source);
-	latest = IDs(out, source,latest);
-
-	if (latest.getLexeme() == "(") {
-		Syntax_Error(latest, out, "(");
-	}
-	latest = OFD(out, source);
-	if (latest.getLexeme() == ")") {
-		Syntax_Error(latest, out , ")");
-	}
-	latest = ODL(out, source);
-	
-	if (latest.getLexeme() == "{") {
-		Body(out, source);
-	}
-	else
-		Syntax_Error(latest, out, "{");
-	
-}
-
-record Func_Def_Cont(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Function Definitions>' ::= <Function Definitions> | <Empty>\n";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() != "function") {
-		return latest;
-	}
-	else
-		return Func_Def(out, source);
-}
-
-record Func_Def(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Function Definitions> ::= <Function> <Function Definitions>'\n";
-	Func(out, source);
-	return Func_Def_Cont(out, source);
-}
-record OFD(std::ofstream& out, std::ifstream& source) {
-
-	if (display)
-		out << "<Opt Function Definitions> ::= <Function Definitions> | <Empty>\n";
-	record latest = callLexer(out, source);
-	if (latest.getLexeme() != "function") {
-		return latest;
-	}
-	else
-		return Func_Def(out, source);
-}
-
-void Rat20F(std::ofstream& out, std::ifstream& source) {
-	if (display)
-		out << "<Rat20F> ::= <Opt Function Definitions> $$ <Opt Declaration List> <Statement List> $$\n";
-
-	record latest = OFD(out,source);
-
-	if (latest.getLexeme() != "$$")
-		Syntax_Error(latest, out,"$$");
-
-	latest = ODL(out,source); // <Opt Declaration List>
-	State_List(out, source, latest);
-	Lexeme_Check(out, source, "$$");
-}
+void Rat20F(std::ofstream& out, std::ifstream& source);
+record OFD(std::ofstream& out, std::ifstream& source); 
+record IDs(std::ofstream& out, std::ifstream& source, record latest);
+record IDs_Cont(std::ofstream& out, std::ifstream& source);
+void Compound(std::ofstream& out, std::ifstream& source);
+record Statement(std::ofstream& out, std::ifstream& source, record latest);
+record State_List(std::ofstream& out, std::ifstream& source, record latest);
+record Expression(std::ofstream& out, std::ifstream& source, record latest);
+record Para_List(std::ofstream& out, std::ifstream& source, record latest);
+record Decla_List(std::ofstream& out, std::ifstream& source, record latest);
+record Func_Def(std::ofstream& out, std::ifstream& source);
+record Assign(std::ofstream& out, std::ifstream& source);
+void If(std::ofstream& out, std::ifstream& source); 
+void Return(std::ofstream& out, std::ifstream& source);
+void IfP(std::ofstream& out, std::ifstream& source, record latest);
+void ReturnP(std::ofstream& out, std::ifstream& source);
 
 int main(int argc, const char* argv[]) {
 
@@ -553,4 +144,456 @@ int main(int argc, const char* argv[]) {
 	out.close();
 	source.close();
 	return 0;
+}
+// RJ's Section
+
+void Empty(std::ofstream& out, std::ifstream& source) {
+	//Do nothing
+}
+
+record PrimaryP(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Primary>' ::= ( <IDs> ) | <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() != "(") {
+		return latest;
+	}
+	else 
+		latest = IDs(out, source, callLexer(out, source));
+	if (latest.getLexeme() != ")") {
+		Syntax_Error(latest, out, ")");
+	}
+	else 
+		return callLexer(out, source);
+}
+
+record Primary(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Primary> ::= <Identifier> <Primary>' | <Integer> | ( <Expression> ) | <Real> | true | false\n";
+
+	// <Identifier> <Primary>'
+	if (latest.getToken() == "identifier")
+		return PrimaryP(out, source);
+	// (<Expression>)
+	else if (latest.getLexeme() == "(") {
+		latest = Expression(out, source, callLexer(out, source));
+		if (latest.getLexeme() != ")") {
+			Syntax_Error(latest, out, ")");
+		}
+		else
+			return callLexer(out, source);
+	}
+	// <Integer>
+	else if (latest.getToken() == "int")
+		/* do i return the lexeme here? */
+		return callLexer(out, source);
+	// <Real>
+	else if (latest.getToken() == "real")
+		/* do i return the lexeme here? */
+		return callLexer(out, source);
+	// true | false 
+	else if (latest.getLexeme() == "true" || latest.getLexeme() == "false")
+		return callLexer(out, source);
+	else 
+		Syntax_Error(latest, out, "<Identifier> <Primary>' or <Integer> or ( <Expression> ) or <Real> or true or false");
+}
+
+record Factor(std::ofstream& out, std::ifstream& source,record latest) {
+	if (display)
+		out << "\t<Factor> ::= - <Primary> | <Primary>\n";
+
+	if (latest.getLexeme() == "-")
+		return Primary(out, source, callLexer(out, source));
+	else
+		return Primary(out, source, latest);
+}
+
+record TermP(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Term>' ::= * <Factor> <Term>' | / <Factor> <Term>' | <Empty>\n";
+	if (latest.getLexeme() == "*" || latest.getLexeme() == "/") {
+		latest = Factor(out, source, callLexer(out, source));
+		return TermP(out,source,latest);
+	}
+	else
+		return latest;
+}
+
+record Term(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Term> ::= <Factor> <Term>'\n";
+	latest = Factor(out, source, latest);
+	return TermP(out, source,latest);
+}
+
+record ExpressionP(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Expression>' ::= + <Term> <Expression>' | - <Term> <Expression>' | <Empty>\n";
+	if (latest.getLexeme() == "+" || latest.getLexeme() == "-") {
+		Term(out, source, callLexer(out, source));
+		ExpressionP(out, source, latest);
+	}
+	else
+		return latest;
+}
+
+record Expression(std::ofstream& out, std::ifstream& source,record latest) {
+	if (display)
+		out << "\t<Expression> ::= <Term> <Expression>'\n";
+	latest = Term(out, source, latest);
+	return ExpressionP(out, source,latest);
+}
+
+void Relop(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Relop> ::= == | != | > | < | <= | =>\n";
+	if (latest.getLexeme() == "==" || latest.getLexeme() == "!=" || latest.getLexeme() == ">" || latest.getLexeme() == "<" || latest.getLexeme() == "<=" || latest.getLexeme() == "=>")
+		return;
+}
+
+record Condition(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Condition> ::= <Expression> <Relop> <Expression>\n";
+	record latest = Expression(out, source, callLexer(out, source));
+	Relop(out, source,latest);
+	return Expression(out, source, callLexer(out, source));
+}
+
+record While(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<While> ::= while ( <Condition> ) <Statement>\n";
+
+	Lexeme_Check(out, source, "(");
+	record latest = Condition(out, source);
+	if (latest.getLexeme() != ")") {
+		Syntax_Error(latest, out, ")");
+	}
+	return Statement(out, source, callLexer(out, source));
+	
+}
+
+void Scan(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Scan> ::= get ( <IDs> );\n";
+
+	Lexeme_Check(out, source, "(");
+	record latest = IDs(out, source, callLexer(out, source));
+	if (latest.getLexeme() != ")") {
+		Syntax_Error(latest, out, ")");
+	}
+	Lexeme_Check(out, source, ";");
+}
+
+void Print(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Print> ::= put ( <Expression> );\n";
+
+
+	Lexeme_Check(out, source, "(");
+	record latest = Expression(out, source, callLexer(out, source));
+	if (latest.getLexeme() != ")") {
+		Syntax_Error(latest, out, ")");
+	}
+	Lexeme_Check(out, source, ";");
+}
+
+// Vien's Section
+
+record IDs_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<IDs>' ::= ,  <IDs>  |  <Empty>'\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == ",")
+		return IDs(out, source, callLexer(out, source));
+	else
+		return latest;
+}
+
+record IDs(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<IDs> ::= <Identifier> <IDs>'\n";
+	if (latest.getToken() != "identifier")
+		Syntax_Error(latest, out, "an identifier");
+	return IDs_Cont(out, source);
+}
+
+void Body(std::ofstream& out, std::ifstream& source,record latest) {
+	if (display)
+		out << "\t<Body> ::= { < Statement List> }\n";
+	if (latest.getLexeme() != "{") {
+		Syntax_Error(latest, out, "{");
+	}
+	latest = callLexer(out, source);
+	State_List(out, source, latest);
+	if (latest.getLexeme() != "}") {
+		Syntax_Error(latest, out, "}");
+	}
+}
+
+void Qualifier(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Qualifier> ::= int | boolean | real\n";
+	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
+		return;
+	else
+		Syntax_Error(latest, out, "int, boolean, or real");
+}
+
+void Parameter(std::ofstream& out, std::ifstream& source, record a) {
+	if (display)
+		out << "\t<Parameter> ::= <IDs> <Qualifier>\n";
+	record latest = IDs(out, source, a);
+	Qualifier(out, source, latest);
+}
+
+record Decla(std::ofstream& out, std::ifstream& source, record a) {
+	if (display)
+		out << "\t<Parameter> ::= <Qualifier> <IDs>\n";
+	Qualifier(out, source, a);
+	record latest = callLexer(out, source);
+	return IDs(out, source, latest);
+}
+
+record Para_List_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Parameter List>\' ::= ,  <Parameter List>  |  <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == ",")
+		return Para_List(out, source, callLexer(out, source));
+	else
+		return latest;
+}
+
+record Para_List(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Parameter List> ::= <Parameter> <Parameter List>'\n";
+	Parameter(out, source, latest);
+	return Para_List_Cont(out, source);
+}
+
+record Decla_List_Cont(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Declaration List>\' ::= <Declaration List>  |  <Empty>\n";
+	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
+		return Decla_List(out, source, latest);
+	else
+		return latest;
+}
+
+record Decla_List(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Declaration List> ::= <Declaration>  <Declaration List>\'\n";
+	record l = Decla(out, source, latest);
+	return Decla_List_Cont(out, source, l);
+}
+
+record State_List_Cont(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Statement List>\' ::= <Statement List>  |  <Empty>\n";
+	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real")
+		return State_List(out, source, latest);
+	else
+		return latest;
+}
+
+record State_List(std::ofstream& out, std::ifstream& source, record latest) {
+	if (display)
+		out << "\t<Statement List> ::= <Statement> <Statement  List>\'\n";
+	latest = Statement(out, source, latest);
+	return State_List_Cont(out, source, latest);
+}
+
+record OPL(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Opt Parameter List> ::= <Parameter List> | <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getToken() != "identifier") {
+		return latest;
+	}
+	return Para_List(out, source, latest);
+
+}
+
+record ODL(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Opt Declaration List> ::= <Declaration List> | <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == "int" || latest.getLexeme() == "boolean" || latest.getLexeme() == "real") {
+		return Decla_List(out, source, latest);
+	}
+	else
+		return latest;
+
+}
+
+void Func(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>\n";
+
+	record latest = callLexer(out, source);
+	latest = IDs(out, source, latest);
+
+	if (latest.getLexeme() != "(") {
+		Syntax_Error(latest, out, "(");
+	}
+	latest = OPL(out, source);
+	if (latest.getLexeme() != ")") {
+		Syntax_Error(latest, out, ")");
+	}
+	latest = ODL(out, source);
+	Body(out, source,latest);
+
+}
+
+record Func_Def_Cont(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Function Definitions>' ::= <Function Definitions> | <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() != "function") {
+		return latest;
+	}
+	else
+		return Func_Def(out, source);
+}
+
+record Func_Def(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Function Definitions> ::= <Function> <Function Definitions>'\n";
+	Func(out, source);
+	return Func_Def_Cont(out, source);
+}
+record OFD(std::ofstream& out, std::ifstream& source) {
+
+	if (display)
+		out << "\t<Opt Function Definitions> ::= <Function Definitions> | <Empty>\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() != "function") {
+		return latest;
+	}
+	else
+		return Func_Def(out, source);
+}
+
+record Statement(std::ofstream& out, std::ifstream& source,	record latest) {
+	if (display)
+		out << "\t<Statement ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>\n";
+
+	// <Compound>
+	if (latest.getLexeme() == "{") {
+		Compound(out, source);
+		return callLexer(out, source);
+	}
+	//<Assign>
+	else if (latest.getLexeme() == "identifier")
+		return Assign(out, source);
+	//<If>
+	else if (latest.getLexeme() == "if") {
+		If(out, source);
+		return callLexer(out, source);
+	}
+	//<Return>
+	else if (latest.getLexeme() == "return") {
+		Return(out, source);
+		return callLexer(out, source);
+	}
+	//<Print>
+	else if (latest.getLexeme() == "put") {
+		Print(out, source);
+		return callLexer(out, source);
+	}
+	//<Scan>
+	else if (latest.getLexeme() == "get") {
+		Scan(out, source);
+		return callLexer(out, source);
+	}
+	//<While>
+	else if (latest.getLexeme() == "while") {
+		While(out, source);
+		return callLexer(out, source);
+	}
+	else
+		Syntax_Error(latest, out, "{ or identifier or if or return or put or get or while");
+}
+
+void Compound(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Compound> ::= { <Statement List> }\n";
+	record latest = callLexer(out, source);
+	Lexeme_Check(out, source, "{");
+	State_List(out, source, latest);
+	Lexeme_Check(out, source, "}");
+}
+
+record Assign(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Assign> :: <Identifier> = <Expression>\n";
+
+	record latest = callLexer(out, source);
+
+	if (latest.getLexeme() != "=")
+		Syntax_Error(latest, out, "=");
+
+	return Expression(out, source,callLexer(out, source));
+}
+
+void If(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<If> ::= if ( <Condition> ) <Statement> <If>'\n";
+
+	Lexeme_Check(out, source, "(");
+	Condition(out, source);
+	Lexeme_Check(out, source, ")");
+	record latest = Statement(out, source, callLexer(out, source));
+	IfP(out, source, latest);
+	
+}
+
+void IfP(std::ofstream& out, std::ifstream& source, record latest){
+	if (display)
+		out << "\t<If>' ::= fi | else <Statement> fi\n";
+
+	if (latest.getLexeme() == "fi")
+		return;
+
+	else if (latest.getLexeme() == "else") {
+		Statement(out, source, callLexer(out, source));
+		Lexeme_Check(out, source, "fi");
+	}
+}
+
+void Return(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Return> ::= return <Return>'\n";
+	ReturnP(out, source);
+	return;
+}
+
+void ReturnP(std::ofstream& out, std::ifstream& source) {
+	if (display)
+		out << "\t<Return>' ::= ; | <Expression>;\n";
+	record latest = callLexer(out, source);
+	if (latest.getLexeme() == ";")
+		return;
+	else
+		latest = Expression(out, source, latest);
+
+	if (latest.getLexeme() != ";") {
+		Syntax_Error(latest, out, ";");
+	}
+	
+}
+
+void Rat20F(std::ofstream& out, std::ifstream& source) {
+	display = true;
+	if (display)
+		out << "\t<Rat20F> ::= <Opt Function Definitions> $$ <Opt Declaration List> <Statement List> $$\n";
+
+	record latest = OFD(out, source);
+
+	if (latest.getLexeme() != "$$")
+		Syntax_Error(latest, out, "$$");
+
+	latest = ODL(out, source); // <Opt Declaration List>
+	State_List(out, source, latest);
+	Lexeme_Check(out, source, "$$");
 }
