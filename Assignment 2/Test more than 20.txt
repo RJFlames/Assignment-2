@@ -1,0 +1,31 @@
+function convertFtoC(f real) {
+	real c;
+	c = (5.0 / 9.0)*(f - 32);
+	return c;
+}
+
+function convertCtoF(C real) {
+	real F;
+	F = (9.0 / 5.0)*(C + 32);
+	return F;
+}
+
+function convertCtoK(c real) { return c - 273; }
+
+function convertFtoK(f real) { 
+	return convertCtoK(convertFtoC(f)); 
+}
+
+function convertKtoC(k real) { return k + 273; }
+
+$$
+ 	int low, high, step; /* declarations */
+ 	get (low, high, step);
+ 	while (low <= high ){ 
+		put (low);
+ 		put (convertFtoC (low));
+		put (convertFtoK (low));
+ 		low = low + step;
+ }
+$$
+
