@@ -145,9 +145,29 @@ void IfP(std::ofstream& out, std::ifstream& source, record latest);
 void ReturnP(std::ofstream& out, std::ifstream& source);
 
 int main(int argc, const char* argv[]) {
-
+	char c;
+	if (argv[1] == nullptr) {
+		std::cerr << "No Input File name Detected\n";
+		std::cin >> c;
+		return 2;
+	}
+	if (argv[2] == nullptr) {
+		std::cerr << "No Output File name Detected\n";
+		std::cin >> c;
+		return 2;
+	}
 	std::ifstream source(argv[1]);
 	std::ofstream out(argv[2]);
+	if (!out.is_open()) {
+		std::cout << "Output file failed to open\n";
+		std::cin >> c;
+		return 2;
+	}
+	if (!source.is_open()){
+		std::cout << "Input file failed to open\n";
+		std::cin >> c;
+		return 2;
+	}
 
 	Rat20F(out, source);
 
