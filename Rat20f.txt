@@ -52,7 +52,7 @@ Original: <Expression>   ::= <Expression> + <Term>  |  <Expression> - <Term>  | 
 <Term>'  ::=  *  <Factor>  <Term>'  |  /  <Factor>  <Term>'  |  ε
 
 Left-Factorizations
-Original: <Function Definitions>  ::= <Function>  |  <Function>  <Function Definitions>
+Original: <Function Definitions>::= <Function>  |  <Function>  <Function Definitions>
 <Function Definitions>          ::= <Function>  <Function Definitions>'
 <Function Definitions>'         ::= <Function Definitions>  |  ε
 
