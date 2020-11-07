@@ -12,7 +12,7 @@ const std::vector<std::string> ops = { "=", "!", "<", ">", "-", "+", "*", "/" , 
 
 class record {
 private:
-	std::string token, lexeme;
+	std::string token, lexeme, linenum;
 public:
 	std::string getToken() { return this->token; }
 	std::string getLexeme() { return this->lexeme; }
@@ -70,7 +70,7 @@ bool FSM(std::string& state, char input, std::string& lexeme) {
 	}
 	return false;
 }
-
+int line = 1;
 record callLexer(std::ofstream& out,std::ifstream& source) {
 	std::string state = "start", lexeme = "";
 	int done = 0;
@@ -103,10 +103,12 @@ record callLexer(std::ofstream& out,std::ifstream& source) {
 			record latest;
 			latest.setLexeme(lexeme);
 			latest.setToken(state);
+			//latest.setLine(line);
 			if (latest.getToken() != "fileend") out << std::left << std::setw(10) << "Token:" << latest.getToken() << "\t:\t" << std::setw(10) << "Lexeme:" << latest.getLexeme() << "\n";
 			return latest;
 		}
 		else if (!isspace(c) && state != "comments" && done != 1) { lexeme.push_back(c); }
+		else if (c == '\n') { line += 1; }
 		
 	}
 	
@@ -115,7 +117,7 @@ record callLexer(std::ofstream& out,std::ifstream& source) {
 bool display = false;
 
 void Syntax_Error(record latest, std::ofstream& out, std::string expected) {
-	std::cerr << "Syntax Error: Expected " << expected << "\n";
+	std::cerr << "Syntax Error: Expected " << expected << " on line " << line <<"\n";
 	std::cerr << "Received " << latest.getToken() << " \"" << latest.getLexeme() << "\"";
 	// 
 	exit(1);
