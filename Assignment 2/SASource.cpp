@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <iomanip>
 
-const std::vector<std::string> keywords = { "int", "float", "return", "function", "while", "if", "fi", "put" , "Boolean" , "real" , "get" , "true" , "false" };
+const std::vector<std::string> keywords = { "int", "float", "return", "function", "while", "if", "fi", "put" , "boolean" , "real" , "get" , "true" , "false" };
 const std::vector<std::string> seps = { "[", "]", "(", ")", "{", "}", ";", ":"  , "$$" , ",", "$" };
 const std::vector<std::string> ops = { "=", "!", "<", ">", "-", "+", "*", "/" , "<=", ">=", "!=", "-=", "+=" };
 
@@ -58,7 +58,7 @@ bool FSM(std::string& state, char input, std::string& lexeme) {
 	else if (state == "real" && !isdigit(input)) {
 		return true;
 	}
-	else if (state != "comments" && c == "/") {
+	else if (state != "comments" && lexeme == "/*") {
 		state = "comments";
 		lexeme = "";
 	}
@@ -114,7 +114,7 @@ record callLexer(std::ofstream& out,std::ifstream& source) {
 	
 }
 
-bool display = false;
+bool display = true;
 
 void Syntax_Error(record latest, std::ofstream& out, std::string expected) {
 	std::cerr << "Syntax Error: Expected " << expected << " on line " << line <<"\n";
@@ -596,8 +596,9 @@ void If(std::ofstream& out, std::ifstream& source) {
 		out << "\t<If> ::= if ( <Condition> ) <Statement> <If>'\n";
 
 	Lexeme_Check(out, source, "(");
-	Condition(out, source);
-	Lexeme_Check(out, source, ")");
+	record latest = Condition(out, source);
+	if (latest.getLexeme() != ")")
+		Syntax_Error(latest, out, ")");
 	Statement(out, source, callLexer(out, source));
 	IfP(out, source, callLexer(out, source));
 	
