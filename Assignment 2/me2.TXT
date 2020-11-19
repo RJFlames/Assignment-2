@@ -1,0 +1,32 @@
+/* test case for Assignment 2 */
+
+function convert (fahr int)
+{
+           return 5 * (fahr - 32 ) / 9 ;
+}
+
+function convertx ( x real , y boolean )
+boolean  k , z ;
+real     x ;
+{
+    if ( x > y )
+       x = false ;
+    fi
+    if ( y  != z )
+       x = true ;
+    else y = 123.45 ;
+    fi
+    return ;
+}
+
+
+$$
+     int    low , high , step ;
+
+     get ( low , high , step ) ;
+     while ( low  <=  high)
+        {  put ( convertx ( low ) );
+           low = low + step ;
+        }
+
+$$
