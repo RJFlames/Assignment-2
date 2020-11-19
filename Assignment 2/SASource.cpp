@@ -104,7 +104,7 @@ record callLexer(std::ofstream& out,std::ifstream& source) {
 			latest.setLexeme(lexeme);
 			latest.setToken(state);
 			//latest.setLine(line);
-			if (latest.getToken() != "fileend") out << std::left << std::setw(10) << "\n\nToken:" << std::setw(10) << latest.getToken() << std::setw(10) << "\tLexeme:" << latest.getLexeme() << "\n";
+			if (latest.getToken() != "fileend") out << std::left << std::setw(10) << "\nToken:" << std::setw(10) << latest.getToken() << std::setw(10) << "\tLexeme:" << latest.getLexeme() << "\n";
 			return latest;
 		}
 		else if (!isspace(c) && state != "comments" && done != 1) { lexeme.push_back(c); }
